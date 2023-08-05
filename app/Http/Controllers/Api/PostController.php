@@ -16,10 +16,12 @@ use Throwable;
 
 class PostController extends Controller
 {
-    function index(int $limit, int $offset)
+    function index(Request $request, int $limit, int $offset)
     {
         try {
-            $post = Post::query()->limit($limit)->offset($offset)->get();
+            $post = Post::query()->limit($limit)->when($request->status, function ($query, $status) {
+                $query->where('status', $status);
+            })->offset($offset)->get();
 
             return ResponseFormatter::success('Post list retrieved successfully', $post);
         } catch (Exception $error) {
@@ -110,7 +112,7 @@ class PostController extends Controller
         if (!$post) {
             return ResponseFormatter::notFound();
         }
-        
+
         try {
             $post->delete();
             return ResponseFormatter::success('Post deleted successfully', null);
